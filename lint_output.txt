@@ -1,0 +1,71 @@
+
+> reservation-site@0.1.0 lint
+> eslint
+
+
+/Users/yamamotokousuke/.gemini/antigravity/scratch/reservation-site/src/app/(admin)/admin/dashboard/AdminDashboardClient.tsx
+    5:10  warning  'Avatar' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    5:18  warning  'AvatarFallback' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   75:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/yamamotokousuke/.gemini/antigravity/scratch/reservation-site/src/app/(admin)/admin/dashboard/AdminDashboardClient.tsx:75:9
+  73 |     const [calendarDate, setCalendarDate] = useState<Date | undefined>(undefined);
+  74 |     useEffect(() => {
+> 75 |         setCalendarDate(new Date());
+     |         ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  76 |     }, []);
+  77 |
+  78 |     // Lesson Management State                react-hooks/set-state-in-effect
+   82:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/yamamotokousuke/.gemini/antigravity/scratch/reservation-site/src/app/(admin)/admin/dashboard/AdminDashboardClient.tsx:82:9
+  80 |     const [shiftDate, setShiftDate] = useState<Date | undefined>(undefined);
+  81 |     useEffect(() => {
+> 82 |         setShiftDate(new Date());
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  83 |     }, []);
+  84 |     const [shiftTime, setShiftTime] = useState("10:00");
+  85 |  react-hooks/set-state-in-effect
+  122:11  warning  'formatDate' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+
+/Users/yamamotokousuke/.gemini/antigravity/scratch/reservation-site/src/app/(admin)/admin/dashboard/actions.ts
+   42:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  108:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  176:14  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/yamamotokousuke/.gemini/antigravity/scratch/reservation-site/src/app/(instructor)/instructor/dashboard/InstructorDashboardClient.tsx
+    4:69  warning  'CardFooter' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   11:10  warning  'Avatar' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   11:18  warning  'AvatarFallback' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+   82:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/yamamotokousuke/.gemini/antigravity/scratch/reservation-site/src/app/(instructor)/instructor/dashboard/InstructorDashboardClient.tsx:82:9
+  80 |
+  81 |     useEffect(() => {
+> 82 |         setDate(new Date());
+     |         ^^^^^^^ Avoid calling setState() directly within an effect
+  83 |     }, []);
+  84 |
+  85 |     const [isDialogOpen, setIsDialogOpen] = useState(false);  react-hooks/set-state-in-effect
+  136:11  warning  'formatDate' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+
+✖ 13 problems (3 errors, 10 warnings)
+

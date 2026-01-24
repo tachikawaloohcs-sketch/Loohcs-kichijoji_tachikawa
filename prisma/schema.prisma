@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String   // Hashed password
+  bio       String?  // Instructor bio/subjects
+  imageUrl  String?  // Avatar image URL
+  role      String   // "ADMIN", "INSTRUCTOR", "STUDENT"
+  isActive  Boolean  @default(true)
+  isProfileComplete Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  instructorShifts Shift[]   @relation("InstructorShifts")
+  studentBookings  Booking[] @relation("StudentBookings")
+  
+  sentRequests     ScheduleRequest[] @relation("StudentRequests")
+  receivedRequests ScheduleRequest[] @relation("InstructorRequests")
+
+  // Archiving & Admission
+  archivedAt       DateTime?
+  archiveYear      Int?
+
+  instructorAccesses ArchiveAccess[] @relation("InstructorAccess")
+  studentAccesses    ArchiveAccess[] @relation("StudentAccess")
+  admissionResults   AdmissionResult[]
+}
+
+model ArchiveAccess {
+  id           String   @id @default(cuid())
+  instructorId String
+  instructor   User     @relation("InstructorAccess", fields: [instructorId], references: [id])
+  studentId    String
+  student      User     @relation("StudentAccess", fields: [studentId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([instructorId, studentId])
+}
+
+model AdmissionResult {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id])
+  
+  schoolName String
+  department String?
+  rank       Int       // 1, 2, 3...
+  
+  status     String    @default("PENDING") // "PENDING", "PASSED_FIRST", "PASSED_FINAL", "REJECTED"
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([studentId, rank])
+}
+
+model Shift {
+  id           String   @id @default(cuid())
+  instructorId String
+  instructor   User     @relation("InstructorShifts", fields: [instructorId], references: [id])
+  start        DateTime
+  end          DateTime
+  type         String   // "INDIVIDUAL", "GROUP", "SPECIAL", "BEGINNER", "TRIAL"
+  className    String?  // For Group/Special
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings     Booking[]
+
+  location     String   @default("ONLINE") // "ONLINE", "KICHIJOJI", "TACHIKAWA"
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation("StudentBookings", fields: [studentId], references: [id])
+  shiftId   String
+  shift     Shift    @relation(fields: [shiftId], references: [id])
+  status    String   // "CONFIRMED", "CANCELLED"
+  meetingType String @default("ONLINE") // "ONLINE", "IN_PERSON"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  report    Report?
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  content   String   // Report content
+  logUrl    String?  // URL to class log
+  homework  String?  // Homework assigned
+  feedback  String?  // Student feedback
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScheduleRequest {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      User     @relation("StudentRequests", fields: [studentId], references: [id])
+  instructorId String
+  instructor   User     @relation("InstructorRequests", fields: [instructorId], references: [id])
+  start        DateTime
+  end          DateTime
+  status       String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  message      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model GlobalSettings {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}

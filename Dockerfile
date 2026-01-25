@@ -60,7 +60,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-RUN npm install -g prisma
+COPY migrate.sh ./migrate.sh
+RUN chmod +x ./migrate.sh
 
 USER nextjs
 

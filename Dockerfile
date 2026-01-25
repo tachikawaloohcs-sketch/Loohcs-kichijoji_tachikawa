@@ -62,6 +62,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY migrate.sh ./migrate.sh
 RUN chmod +x ./migrate.sh
+RUN npm install -g prisma@6.19.2
 
 USER nextjs
 

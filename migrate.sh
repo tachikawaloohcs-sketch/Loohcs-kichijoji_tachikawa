@@ -4,4 +4,4 @@ export HOME=/tmp
 
 # Run migration
 echo "Running prisma migrate deploy..."
-npx prisma migrate deploy
+npx prisma db push --accept-data-loss

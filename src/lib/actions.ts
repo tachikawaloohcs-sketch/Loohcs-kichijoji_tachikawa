@@ -68,6 +68,8 @@ export async function register(prevState: string | undefined, formData: FormData
     }
 
     let imageUrl: string | null = null;
+    // Image upload disabled for Cloud Run (Read-only file system)
+    /*
     if (imageFile && imageFile.size > 0) {
         try {
             const buffer = Buffer.from(await imageFile.arrayBuffer());
@@ -82,6 +84,7 @@ export async function register(prevState: string | undefined, formData: FormData
             // Optionally return error or proceed without image
         }
     }
+    */
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);

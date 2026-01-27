@@ -48,6 +48,17 @@ interface CarteViewerProps {
 
 export function CarteViewer({ students, editable, onUpdateAdmission }: CarteViewerProps) {
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredStudents = students.filter(student => {
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        // Check name
+        if (student.name?.toLowerCase().includes(query)) return true;
+        // Check admission results (Target School)
+        if (student.admissionResults?.some(res => res.schoolName.toLowerCase().includes(query))) return true;
+        return false;
+    });
 
     const formatDate = (d: Date) => format(new Date(d), "yyyy/MM/dd HH:mm");
 
@@ -77,12 +88,19 @@ export function CarteViewer({ students, editable, onUpdateAdmission }: CarteView
                 <CardHeader>
                     <CardTitle>生徒一覧</CardTitle>
                     <CardDescription>生徒を選択して過去のカルテを閲覧</CardDescription>
+                    <div className="pt-2">
+                        <Input
+                            placeholder="名前または志望校で検索..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {students.length === 0 ? (
-                        <p className="text-muted-foreground">生徒がいません</p>
+                    {filteredStudents.length === 0 ? (
+                        <p className="text-muted-foreground">条件に一致する生徒がいません</p>
                     ) : (
-                        students.map((student) => {
+                        filteredStudents.map((student) => {
                             const stats = getStudentStats(student);
                             return (
                                 <div
@@ -123,11 +141,13 @@ export function CarteViewer({ students, editable, onUpdateAdmission }: CarteView
                             )}
                         </div>
 
-                        {/* Admission Results Summary */}
+                        {/* Admission Results Summary (Moved to Top) */}
                         {selectedStudent.admissionResults && selectedStudent.admissionResults.length > 0 && (
-                            <Card className="bg-slate-50 dark:bg-slate-900 border-none">
-                                <CardContent className="pt-6">
-                                    <h3 className="font-semibold mb-2">志望校・合否状況</h3>
+                            <Card className="bg-slate-50 dark:bg-slate-900 border-none mb-6">
+                                <CardContent className="pt-4 pb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h3 className="font-semibold text-sm">志望校・合否状況</h3>
+                                    </div>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedStudent.admissionResults.map(res => (
                                             <div key={res.id} className="bg-white dark:bg-black border rounded px-3 py-1 text-sm flex items-center gap-2">
@@ -142,6 +162,8 @@ export function CarteViewer({ students, editable, onUpdateAdmission }: CarteView
                                 </CardContent>
                             </Card>
                         )}
+
+
 
                         {selectedStudent.studentBookings.length === 0 ? (
                             <Card>

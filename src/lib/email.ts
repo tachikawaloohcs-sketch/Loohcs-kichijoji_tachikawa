@@ -1,4 +1,5 @@
 
+import sgMail from '@sendgrid/mail';
 
 interface EmailPayload {
     to: string;
@@ -7,19 +8,37 @@ interface EmailPayload {
 }
 
 export async function sendEmail({ to, subject, body }: EmailPayload) {
-    // In a real application, you would use Resend, SendGrid, or Nodemailer here.
-    // For now, we log to stdout so it appears in Cloud Run logs.
+    const apiKey = process.env.SENDGRID_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM || "tachikawa.loohcs@gmail.com";
 
-    const timestamp = new Date().toISOString();
-    console.log(`
+    if (apiKey) {
+        sgMail.setApiKey(apiKey);
+        try {
+            await sgMail.send({
+                to,
+                from: fromEmail,
+                subject,
+                text: body,
+            });
+            console.log(`[SENDGRID] Email sent to ${to}`);
+            return { success: true };
+        } catch (error) {
+            console.error('[SENDGRID] Error sending email', error);
+            return { success: false, error };
+        }
+    } else {
+        // Mock Implementation for local dev or when API key is missing
+        const timestamp = new Date().toISOString();
+        console.log(`
 =================[ MOCK EMAIL SERVICE ]=================
 Time: ${timestamp}
 To: ${to}
+From: ${fromEmail} (Mock)
 Subject: ${subject}
 --------------------------------------------------------
 ${body}
 ========================================================
 `);
-
-    return { success: true };
+        return { success: true };
+    }
 }

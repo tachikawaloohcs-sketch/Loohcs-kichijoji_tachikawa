@@ -371,11 +371,16 @@ export default function StudentDashboardClient({ instructors, initialBookings }:
                         </div>
                         <div className="space-y-2">
                             <Label>開始時間</Label>
-                            <Input
-                                type="time"
-                                value={requestTime}
-                                onChange={(e) => setRequestTime(e.target.value)}
-                            />
+                            <Select onValueChange={setRequestTime} value={requestTime}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="時間を選択" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 17 }, (_, i) => i + 6).map(hour => (
+                                        <SelectItem key={hour} value={`${hour}:00`}>{`${hour}:00`}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <DialogFooter>

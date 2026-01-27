@@ -7,13 +7,7 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
 // Mock Email Function
-async function sendEmail(to: string, subject: string, body: string) {
-    console.log(`[EMAIL SIMULATION]`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${body}`);
-    console.log(`-------------------`);
-}
+import { sendEmail } from "@/lib/email";
 
 export async function getInstructorShifts() {
     const session = await auth();
@@ -322,18 +316,18 @@ export async function createBooking(shiftId: string, studentId: string) {
         });
 
         // Email to Student
-        await sendEmail(
-            student.email,
-            "【予約確定】授業予約が完了しました",
-            `${student.name}様\n\n以下の通り授業予約が確定しました。\n\n日時: ${format(shift.start, "yyyy/MM/dd HH:mm", { locale: ja })} - ${format(shift.end, "HH:mm", { locale: ja })}\n担当: ${shift.instructor.name}\n場所: ${shift.location === 'ONLINE' ? 'オンライン' : shift.location}\n\n当日よろしくお願いいたします。`
-        );
+        await sendEmail({
+            to: student.email,
+            subject: "【予約確定】授業予約が完了しました",
+            body: `${student.name}様\n\n以下の通り授業予約が確定しました。\n\n日時: ${format(shift.start, "yyyy/MM/dd HH:mm", { locale: ja })} - ${format(shift.end, "HH:mm", { locale: ja })}\n担当: ${shift.instructor.name}\n場所: ${shift.location === 'ONLINE' ? 'オンライン' : shift.location}\n\n当日よろしくお願いいたします。`
+        });
 
         // Email to Instructor
-        await sendEmail(
-            shift.instructor.email,
-            "【予約確定】新規予約が入りました", // Instructor usually knows, but this confirms the action
-            `${shift.instructor.name}先生\n\n以下の授業予約を登録しました。\n\n日時: ${format(shift.start, "yyyy/MM/dd HH:mm", { locale: ja })}\n生徒: ${student.name}\n\nよろしくお願いいたします。`
-        );
+        await sendEmail({
+            to: shift.instructor.email,
+            subject: "【予約確定】新規予約が入りました", // Instructor usually knows, but this confirms the action
+            body: `${shift.instructor.name}先生\n\n以下の授業予約を登録しました。\n\n日時: ${format(shift.start, "yyyy/MM/dd HH:mm", { locale: ja })}\n生徒: ${student.name}\n\nよろしくお願いいたします。`
+        });
 
         revalidatePath("/instructor/dashboard");
         return { success: true };
@@ -382,18 +376,18 @@ export async function approveRequest(requestId: string) {
         });
 
         // Email to Student
-        await sendEmail(
-            request.student.email,
-            "日程リクエストが承認されました",
-            `${format(request.start, "MM/dd HH:mm", { locale: ja })} のリクエストが${request.instructor.name}講師により承認されました。`
-        );
+        await sendEmail({
+            to: request.student.email,
+            subject: "日程リクエストが承認されました",
+            body: `${format(request.start, "MM/dd HH:mm", { locale: ja })} のリクエストが${request.instructor.name}講師により承認されました。`
+        });
 
         // Email to Instructor (Self-copy)
-        await sendEmail(
-            request.instructor.email,
-            "【確認】日程リクエストを承認しました",
-            `${request.student.name}様からのリクエスト（${format(request.start, "MM/dd HH:mm", { locale: ja })}）を承認し、予約を確定させました。`
-        );
+        await sendEmail({
+            to: request.instructor.email,
+            subject: "【確認】日程リクエストを承認しました",
+            body: `${request.student.name}様からのリクエスト（${format(request.start, "MM/dd HH:mm", { locale: ja })}）を承認し、予約を確定させました。`
+        });
 
         revalidatePath("/instructor/dashboard");
         return { success: true };
@@ -420,11 +414,11 @@ export async function rejectRequest(requestId: string) {
             data: { status: "REJECTED" }
         });
 
-        await sendEmail(
-            request.student.email,
-            "日程リクエストが却下されました",
-            `リクエストされた日程は都合により承認されませんでした。別の日程で再度ご検討ください。`
-        );
+        await sendEmail({
+            to: request.student.email,
+            subject: "日程リクエストが却下されました",
+            body: `リクエストされた日程は都合により承認されませんでした。別の日程で再度ご検討ください。`
+        });
 
         revalidatePath("/instructor/dashboard");
         return { success: true };

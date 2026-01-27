@@ -7,13 +7,7 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
 // Mock Email Function
-async function sendEmail(to: string, subject: string, body: string) {
-    console.log(`[EMAIL SIMULATION]`);
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${body}`);
-    console.log(`-------------------`);
-}
+import { sendEmail } from "@/lib/email";
 
 export async function getInstructors() {
     const instructors = await prisma.user.findMany({
@@ -90,8 +84,28 @@ export async function createBooking(shiftId: string, meetingType: string = "ONLI
             },
         });
 
-        console.log(`[EMAIL] To: ${session.user.email} (Student) - Booking Confirmed for ${shift.start}`);
-        console.log(`[EMAIL] To: ${shift.instructor.email} (Instructor) - New Booking for ${shift.start}`);
+        if (session.user.email) {
+            await sendEmail({
+                to: session.user.email,
+                subject: "予約確定のお知らせ",
+                body: `
+${format(shiftStart, "yyyy年MM月dd日 HH:mm", { locale: ja })} からの予約が確定しました。
+担当講師: ${shift.instructor.name || "講師"}
+場所/形式: ${meetingType}
+`
+            });
+        }
+
+        if (shift.instructor.email) {
+            await sendEmail({
+                to: shift.instructor.email,
+                subject: "新規予約が入りました",
+                body: `
+${format(shiftStart, "yyyy年MM月dd日 HH:mm", { locale: ja })} の枠に新しい予約が入りました。
+生徒: ${session.user.name || "生徒"}
+`
+            });
+        }
 
         revalidatePath("/student/dashboard");
         return { success: true, booking };
@@ -151,16 +165,70 @@ export async function createRequest(instructorId: string, date: Date, time: stri
         });
 
         // Notify Instructor
-        await sendEmail(
-            request.instructor.email,
-            "新しい日程リクエストが届きました",
-            `生徒 ${request.student.name} から ${format(startDateTime, "MM/dd HH:mm", { locale: ja })} の日程リクエストが届きました。ダッシュボードから承認・却下を行ってください。`
-        );
+        // Notify Instructor
+        await sendEmail({
+            to: request.instructor.email,
+            subject: "新しい日程リクエストが届きました",
+            body: `生徒 ${request.student.name} から ${format(startDateTime, "MM/dd HH:mm", { locale: ja })} の日程リクエストが届きました。ダッシュボードから承認・却下を行ってください。`
+        });
 
         revalidatePath("/student/dashboard");
         return { success: true };
     } catch (e) {
         console.error(e);
         return { error: "リクエスト送信に失敗しました" };
+    }
+}
+
+export async function cancelBooking(bookingId: string) {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "STUDENT") {
+        return { error: "Unauthorized" };
+    }
+
+    const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { shift: { include: { instructor: true } }, student: true }
+    });
+
+    if (!booking) return { error: "Booking not found" };
+    if (booking.studentId !== session.user.id) return { error: "Unauthorized" };
+
+    try {
+        await prisma.booking.delete({
+            where: { id: bookingId }
+        });
+
+        // Email Notifications
+        if (booking.student.email) {
+            await sendEmail({
+                to: booking.student.email,
+                subject: "予約キャンセルのお知らせ",
+                body: `
+以下の予約をキャンセルしました。
+
+日時: ${format(new Date(booking.shift.start), "yyyy年MM月dd日 HH:mm", { locale: ja })}
+講師: ${booking.shift.instructor.name}
+`
+            });
+        }
+
+        if (booking.shift.instructor.email) {
+            await sendEmail({
+                to: booking.shift.instructor.email,
+                subject: "予約がキャンセルされました",
+                body: `
+以下の予約がキャンセルされました。
+
+日時: ${format(new Date(booking.shift.start), "yyyy年MM月dd日 HH:mm", { locale: ja })}
+生徒: ${booking.student.name}
+`
+            });
+        }
+
+        revalidatePath("/student/dashboard");
+        return { success: true };
+    } catch {
+        return { error: "Failed to cancel booking" };
     }
 }

@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
+import { fromZonedTime } from 'date-fns-tz';
+
 // Mock Email Function
 import { sendEmail } from "@/lib/email";
 
@@ -146,9 +148,17 @@ export async function createRequest(instructorId: string, date: Date, time: stri
         return { error: "Unauthorized" };
     }
 
-    const [hours, minutes] = time.split(":").map(Number);
-    const startDateTime = new Date(date);
-    startDateTime.setHours(hours, minutes, 0, 0);
+    const dateObj = new Date(date);
+    const yyyy = dateObj.getFullYear();
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+
+    // Construct "YYYY-MM-DD HH:mm" string
+    const dateTimeStr = `${yyyy}-${mm}-${dd} ${time}`;
+
+    // Convert this "JST string" to a Date object (which will be the correct UTC instant)
+    const startDateTime = fromZonedTime(dateTimeStr, 'Asia/Tokyo');
+
     const endDateTime = new Date(startDateTime);
     endDateTime.setHours(startDateTime.getHours() + 1); // 1 hour duration default
 

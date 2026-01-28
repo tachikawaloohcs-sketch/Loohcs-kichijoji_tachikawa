@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
+import { fromZonedTime } from 'date-fns-tz';
+
 // Mock Email Function
 import { sendEmail } from "@/lib/email";
 
@@ -136,8 +138,9 @@ export async function createShift(formData: FormData) {
         return { error: "Missing fields" };
     }
 
-    const startDateTime = new Date(`${dateStr}T${startTime}:00`);
-    const endDateTime = new Date(`${dateStr}T${endTime}:00`);
+    // Parse as JST
+    const startDateTime = fromZonedTime(`${dateStr} ${startTime}`, 'Asia/Tokyo');
+    const endDateTime = fromZonedTime(`${dateStr} ${endTime}`, 'Asia/Tokyo');
 
     // Check for overlaps
     const overlap = await prisma.shift.findFirst({

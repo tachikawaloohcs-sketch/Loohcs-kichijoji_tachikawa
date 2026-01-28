@@ -4,14 +4,25 @@ import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/actions";
 
 export default async function InstructorDashboardPage() {
-    const shifts = await getInstructorShifts();
-    const requests = await getInstructorRequests();
-    const students = await getStudentsForInstructor();
-    const archivedStudents = await getLicensedArchivedStudents();
-    const deadlineSetting = await getGlobalSettings("CARTE_DEADLINE_EXTENSION_HOURS");
+    const [
+        shifts,
+        requests,
+        students,
+        archivedStudents,
+        deadlineSetting,
+        masterShifts,
+        history
+    ] = await Promise.all([
+        getInstructorShifts(),
+        getInstructorRequests(),
+        getStudentsForInstructor(),
+        getLicensedArchivedStudents(),
+        getGlobalSettings("CARTE_DEADLINE_EXTENSION_HOURS"),
+        getAllShifts(),
+        getInstructorHistory()
+    ]);
+
     const extensionHours = parseInt(deadlineSetting.value || "0", 10);
-    const masterShifts = await getAllShifts();
-    const history = await getInstructorHistory();
 
     return (
         <div className="p-8 space-y-8 max-w-7xl mx-auto">

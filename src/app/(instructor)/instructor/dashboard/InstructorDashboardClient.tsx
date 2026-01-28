@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isSameDay } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { ja } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -173,8 +174,8 @@ export default function InstructorDashboardClient({
         return currentShifts.filter((s) => isSameDay(s.start, day));
     };
 
-    const formatDate = (d: Date) => format(d, "yyyy/MM/dd HH:mm");
-    const formatTime = (d: Date) => format(d, "HH:mm");
+    const formatDate = (d: Date) => formatInTimeZone(d, "Asia/Tokyo", "yyyy/MM/dd HH:mm", { locale: ja });
+    const formatTime = (d: Date) => formatInTimeZone(d, "Asia/Tokyo", "HH:mm", { locale: ja });
 
     const getLocationLabel = (loc?: string) => {
         switch (loc) {
@@ -351,7 +352,7 @@ export default function InstructorDashboardClient({
                                 </div>
                                 <div className="flex-1 space-y-6">
                                     <h3 className="font-bold text-2xl border-b pb-4 flex items-center gap-2">
-                                        <span className="text-blue-600">{date ? format(date, "M月d日", { locale: ja }) : "日付未選択"}</span>
+                                        <span className="text-blue-600">{date ? formatInTimeZone(date, "Asia/Tokyo", "M月d日", { locale: ja }) : "日付未選択"}</span>
                                         <span className="text-slate-700 text-lg">のシフト</span>
                                     </h3>
 
@@ -470,7 +471,7 @@ export default function InstructorDashboardClient({
                                         <div key={req.id} className="p-3 border rounded bg-slate-50 dark:bg-slate-900 space-y-2">
                                             <div className="font-bold text-sm">{req.student.name}</div>
                                             <div className="text-sm">
-                                                {format(req.start, "M/d HH:mm", { locale: ja })} - {format(req.end, "HH:mm")}
+                                                {formatInTimeZone(req.start, "Asia/Tokyo", "M/d HH:mm", { locale: ja })} - {formatInTimeZone(req.end, "Asia/Tokyo", "HH:mm", { locale: ja })}
                                             </div>
                                             <div className="flex gap-2 justify-end">
                                                 <Button size="sm" variant="outline" className="text-red-500 hover:text-red-700" onClick={() => handleRejectRequest(req.id)} disabled={isPending}>却下</Button>
@@ -489,7 +490,7 @@ export default function InstructorDashboardClient({
                             <DialogHeader>
                                 <DialogTitle>シフトを追加</DialogTitle>
                                 <DialogDescription>
-                                    {date && format(date, "yyyy年M月d日", { locale: ja })} のシフト詳細を入力してください。
+                                    {date && formatInTimeZone(date, "Asia/Tokyo", "yyyy年M月d日", { locale: ja })} のシフト詳細を入力してください。
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -635,7 +636,7 @@ export default function InstructorDashboardClient({
                                             <div className="flex items-center gap-4">
                                                 <div className="text-sm font-bold w-32">{shift.instructor.name}</div>
                                                 <div className="font-mono text-sm">
-                                                    {format(new Date(shift.start), "M/d HH:mm")} - {format(new Date(shift.end), "HH:mm")}
+                                                    {formatInTimeZone(new Date(shift.start), "Asia/Tokyo", "M/d HH:mm", { locale: ja })} - {formatInTimeZone(new Date(shift.end), "Asia/Tokyo", "HH:mm", { locale: ja })}
                                                 </div>
                                                 <Badge variant={shift.type === "INDIVIDUAL" ? "default" : shift.type === "GROUP" ? "secondary" : "outline"}>
                                                     {shift.type === "INDIVIDUAL" ? "個別" : shift.type === "GROUP" ? "集団" : "その他"}
@@ -667,7 +668,7 @@ export default function InstructorDashboardClient({
                                 {history.map((booking: any) => (
                                     <div key={booking.id} className="flex justify-between items-center p-3 border rounded flex-wrap">
                                         <div className="flex gap-4 items-center">
-                                            <div className="font-mono text-sm">{format(new Date(booking.shift.start), "yyyy/MM/dd HH:mm")}</div>
+                                            <div className="font-mono text-sm">{formatInTimeZone(new Date(booking.shift.start), "Asia/Tokyo", "yyyy/MM/dd HH:mm", { locale: ja })}</div>
                                             <div className="font-bold">{booking.student.name}</div>
                                             <Badge variant={booking.report ? "default" : "destructive"}>
                                                 {booking.report ? "カルテ提出済" : "未提出"}

@@ -99,7 +99,12 @@ export default function InstructorDashboardClient({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     history?: any[]
 }) {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>(undefined);
+
+    // Fix Hydration Error: Initialize date only on client
+    useEffect(() => {
+        setDate(new Date());
+    }, []);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const currentShifts = initialShifts;

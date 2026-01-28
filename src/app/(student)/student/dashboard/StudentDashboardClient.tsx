@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,7 +53,12 @@ interface Booking {
 
 export default function StudentDashboardClient({ instructors, initialBookings }: { instructors: User[], initialBookings: Booking[] }) {
     const [selectedInstructor, setSelectedInstructor] = useState<User | null>(null);
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>(undefined);
+
+    // Fix Hydration Error
+    useEffect(() => {
+        setDate(new Date());
+    }, []);
     const [shifts, setShifts] = useState<Shift[]>([]);
     const [loadingShifts, setLoadingShifts] = useState(false);
     const [isPending, startTransition] = useTransition();

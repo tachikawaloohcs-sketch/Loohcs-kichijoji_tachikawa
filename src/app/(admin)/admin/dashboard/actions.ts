@@ -210,21 +210,13 @@ export async function getMasterSchedule() {
 
 
 // 授業管理: 特権シフト作成（制限なし）
-export async function adminCreateShift(instructorId: string, date: Date, startTime: string, endTime: string, type: string) {
+export async function adminCreateShift(instructorId: string, dateStr: string, startTime: string, endTime: string, type: string) {
     const session = await auth();
     if (session?.user?.role !== "ADMIN") return { error: "Unauthorized" };
 
-    // Parse as JST
-    // date comes as a Date object from the server action serialization, usually UTC 00:00 of that day if passed from client new Date('YYYY-MM-DD')
-    // But to be safe and precise, we should construct the string "YYYY-MM-DD HH:mm" representing JST and parse it.
-
-    // We can assume 'date' parameter has the correct Y-M-D info.
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-
-    const startDateTime = fromZonedTime(`${yyyy}-${mm}-${dd} ${startTime}`, 'Asia/Tokyo');
-    const endDateTime = fromZonedTime(`${yyyy}-${mm}-${dd} ${endTime}`, 'Asia/Tokyo');
+    // Parse as JST (dateStr is "YYYY-MM-DD")
+    const startDateTime = fromZonedTime(`${dateStr} ${startTime}`, 'Asia/Tokyo');
+    const endDateTime = fromZonedTime(`${dateStr} ${endTime}`, 'Asia/Tokyo');
 
     // Overlap Check for Admin
     const overlap = await prisma.shift.findFirst({

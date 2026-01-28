@@ -144,7 +144,9 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
         // Ensure shiftDate is valid
         if (isNaN(shiftDate.getTime())) return alert("無効な日付です");
 
-        const res = await adminCreateShift(shiftInstructorId, shiftDate, shiftTime, shiftEndTime, shiftType);
+        // Pass date as string "YYYY-MM-DD"
+        const dateStr = format(shiftDate, "yyyy-MM-dd");
+        const res = await adminCreateShift(shiftInstructorId, dateStr, shiftTime, shiftEndTime, shiftType);
         if (res.success) {
             alert("シフトを作成しました");
             // Optional: reset form or just keep it

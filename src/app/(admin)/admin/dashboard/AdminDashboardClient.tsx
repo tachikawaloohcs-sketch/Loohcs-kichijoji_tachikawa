@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useOptimistic, startTransition } from "react";
+import { useState, useEffect, startTransition } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -90,10 +90,12 @@ import { logout } from "@/lib/actions";
 import { CarteViewer } from "@/components/dashboard/CarteViewer";
 
 export default function AdminDashboardClient({ students, allUsers, allInstructors, masterShifts, initialDeadlineExtension = 0 }: { students: Student[], allUsers: User[], allInstructors: Instructor[], masterShifts: Shift[], initialDeadlineExtension?: number }) {
-    const [optimisticShifts, addOptimisticShift] = useOptimistic(
-        masterShifts,
-        (state, deletedShiftId: string) => state.filter((shift) => shift.id !== deletedShiftId)
-    );
+    const [optimisticShifts, setOptimisticShifts] = useState(masterShifts);
+
+    // Sync with server data when it returns
+    useEffect(() => {
+        setOptimisticShifts(masterShifts);
+    }, [masterShifts]);
 
     const [activeTab, setActiveTab] = useState("reports");
     const [calendarDate, setCalendarDate] = useState<Date | undefined>(undefined);
@@ -319,15 +321,20 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
                                                                 variant="destructive"
                                                                 size="sm"
                                                                 className="h-6 text-[10px] px-2"
+                                                                onClick={async () => {
                                                                     if (!confirm("本当にこのシフトを削除しますか？\n（予約がある場合、予約も削除されます）")) return;
-                                                                    
+
+                                                                    // Optimistic update: remove immediately
+                                                                    setOptimisticShifts(prev => prev.filter(s => s.id !== shift.id));
+
                                                                     startTransition(async () => {
-                                                                        addOptimisticShift(shift.id);
                                                                         const res = await adminDeleteShift(shift.id);
                                                                         if (res.success) {
-                                                                            // alert("削除しました"); // Skip alert for smoother UX or use toast
+                                                                            // Success: wait for revalidatePath from server to update props
                                                                         } else {
                                                                             alert(res.error);
+                                                                            // Revert on error
+                                                                            setOptimisticShifts(masterShifts);
                                                                         }
                                                                     });
                                                                 }}
@@ -671,49 +678,49 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
                         </CardContent>
                     </Card>
                 </TabsContent>
-            </Tabs >
+            </Tabs>
 
-        {/* Archive Access Management Dialog */ }
-        < Dialog open = { isAccessDialogOpen } onOpenChange = { setIsAccessDialogOpen } >
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>アーカイブ閲覧権限の管理</DialogTitle>
-                    <DialogDescription>
-                        {selectedArchiveStudent?.name} のアーカイブを閲覧できる講師を設定します。
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <Label>権限を持つ講師</Label>
-                    <div className="border rounded-md p-2 max-h-60 overflow-y-auto space-y-2">
-                        {allInstructors.map(inst => {
-                            const hasAccess = accessInstructors.some(a => a.id === inst.id);
-                            return (
-                                <div key={inst.id} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded">
-                                    <span>{inst.name}</span>
-                                    <Button
-                                        variant={hasAccess ? "destructive" : "outline"}
-                                        size="sm"
-                                        onClick={async () => {
-                                            if (!selectedArchiveStudent) return;
-                                            if (hasAccess) {
-                                                await revokeArchiveAccess(inst.id, selectedArchiveStudent.id);
-                                            } else {
-                                                await grantArchiveAccess(inst.id, selectedArchiveStudent.id);
-                                            }
-                                            // Refresh local list
-                                            const updated = await getArchiveAccesses(selectedArchiveStudent.id);
-                                            setAccessInstructors(updated);
-                                        }}
-                                    >
-                                        {hasAccess ? "解除" : "許可"}
-                                    </Button>
-                                </div>
-                            );
-                        })}
+            {/* Archive Access Management Dialog */}
+            <Dialog open={isAccessDialogOpen} onOpenChange={setIsAccessDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>アーカイブ閲覧権限の管理</DialogTitle>
+                        <DialogDescription>
+                            {selectedArchiveStudent?.name} のアーカイブを閲覧できる講師を設定します。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <Label>権限を持つ講師</Label>
+                        <div className="border rounded-md p-2 max-h-60 overflow-y-auto space-y-2">
+                            {allInstructors.map(inst => {
+                                const hasAccess = accessInstructors.some(a => a.id === inst.id);
+                                return (
+                                    <div key={inst.id} className="flex justify-between items-center p-2 hover:bg-muted/50 rounded">
+                                        <span>{inst.name}</span>
+                                        <Button
+                                            variant={hasAccess ? "destructive" : "outline"}
+                                            size="sm"
+                                            onClick={async () => {
+                                                if (!selectedArchiveStudent) return;
+                                                if (hasAccess) {
+                                                    await revokeArchiveAccess(inst.id, selectedArchiveStudent.id);
+                                                } else {
+                                                    await grantArchiveAccess(inst.id, selectedArchiveStudent.id);
+                                                }
+                                                // Refresh local list
+                                                const updated = await getArchiveAccesses(selectedArchiveStudent.id);
+                                                setAccessInstructors(updated);
+                                            }}
+                                        >
+                                            {hasAccess ? "解除" : "許可"}
+                                        </Button>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            </DialogContent>
-            </Dialog >
-        </div >
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }

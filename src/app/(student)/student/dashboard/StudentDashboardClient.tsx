@@ -70,7 +70,8 @@ export default function StudentDashboardClient({ instructors, initialBookings }:
     // Request Dialog
     const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
     const [requestInstructorId, setRequestInstructorId] = useState<string>("");
-    const [requestDate, setRequestDate] = useState<Date | undefined>(new Date());
+    const [requestDate, setRequestDate] = useState<Date | undefined>(undefined);
+    useEffect(() => { setRequestDate(new Date()); }, []);
     const [requestTime, setRequestTime] = useState("10:00");
     const [isRequesting, setIsRequesting] = useState(false);
 

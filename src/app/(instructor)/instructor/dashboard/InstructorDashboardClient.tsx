@@ -99,6 +99,12 @@ export default function InstructorDashboardClient({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     history?: any[]
 }) {
+    const [now, setNow] = useState<Date | null>(null);
+    useEffect(() => {
+        setNow(new Date());
+        // Optional: Update 'now' every minute if needed, but for initial render fix just once is enough
+    }, []);
+
     const [date, setDate] = useState<Date | undefined>(undefined);
 
     // Fix Hydration Error: Initialize date only on client
@@ -193,12 +199,12 @@ export default function InstructorDashboardClient({
 
     // Filter for Today's Classes needing reports
     const todayClasses = useMemo(() => {
-        const today = new Date();
+        if (!now) return [];
         return currentShifts.filter(s =>
-            isSameDay(s.start, today) &&
+            isSameDay(s.start, now) &&
             s.bookings.length > 0
         );
-    }, [currentShifts]);
+    }, [currentShifts, now]);
 
     const openReportDialog = (bookingId: string) => {
         setSelectedBookingId(bookingId);
@@ -271,7 +277,8 @@ export default function InstructorDashboardClient({
     };
 
     const getDeadlineText = () => {
-        const deadline = new Date();
+        if (!now) return "";
+        const deadline = new Date(now);
         deadline.setHours(23, 59, 0, 0);
 
         if (deadlineExtensionHours > 0) {
@@ -305,7 +312,7 @@ export default function InstructorDashboardClient({
                                 <CardContent className="space-y-4">
                                     {todayClasses.map(shift => (
                                         shift.bookings.filter(b => b.status === 'CONFIRMED').map(booking => {
-                                            const isStarted = new Date() >= new Date(shift.start);
+                                            const isStarted = now ? now >= new Date(shift.start) : false;
                                             return (
                                                 <div key={booking.id} className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 rounded shadow-sm border-l-4 border-l-orange-500">
                                                     <div>

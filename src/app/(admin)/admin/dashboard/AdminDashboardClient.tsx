@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { format, isSameDay } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { ja } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
@@ -90,17 +91,21 @@ import { CarteViewer } from "@/components/dashboard/CarteViewer";
 
 export default function AdminDashboardClient({ students, allUsers, allInstructors, masterShifts, initialDeadlineExtension = 0 }: { students: Student[], allUsers: User[], allInstructors: Instructor[], masterShifts: Shift[], initialDeadlineExtension?: number }) {
     const [activeTab, setActiveTab] = useState("reports");
-    const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
-
+    const [calendarDate, setCalendarDate] = useState<Date | undefined>(undefined);
     // Settings State
     const [deadlineExtension, setDeadlineExtension] = useState(initialDeadlineExtension.toString());
 
     // Lesson Management State
     const [shiftInstructorId, setShiftInstructorId] = useState("");
-    const [shiftDate, setShiftDate] = useState<Date | undefined>(new Date());
+    const [shiftDate, setShiftDate] = useState<Date | undefined>(undefined);
     const [shiftTime, setShiftTime] = useState("10:00");
     const [shiftEndTime, setShiftEndTime] = useState("11:00");
     const [shiftType, setShiftType] = useState("INDIVIDUAL");
+
+    useEffect(() => {
+        setCalendarDate(new Date());
+        setShiftDate(new Date());
+    }, []);
 
     useEffect(() => {
         if (!shiftTime) return;
@@ -190,7 +195,7 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
         setIsAccessDialogOpen(true);
     };
 
-    const formatDate = (d: Date) => format(d, "yyyy/MM/dd HH:mm");
+    const formatDate = (d: Date) => formatInTimeZone(d, "Asia/Tokyo", "yyyy/MM/dd HH:mm", { locale: ja });
 
     return (
         <div className="container mx-auto p-6 space-y-8">
@@ -282,7 +287,7 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
                                 </div>
                                 <div className="flex-1 space-y-4">
                                     <h3 className="font-semibold text-lg border-b pb-2">
-                                        {calendarDate ? format(calendarDate, "yyyy年M月d日", { locale: ja }) : "日付を選択"} のシフト
+                                        {calendarDate ? formatInTimeZone(calendarDate, "Asia/Tokyo", "yyyy年M月d日", { locale: ja }) : "日付を選択"} のシフト
                                     </h3>
                                     <div className="space-y-2">
                                         {calendarDate && filteredShifts.filter(s => isSameDay(s.start, calendarDate)).length === 0 ? (
@@ -312,7 +317,7 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span>{format(shift.start, "HH:mm")} - {format(shift.end, "HH:mm")}</span>
+                                                        <span>{formatInTimeZone(shift.start, "Asia/Tokyo", "HH:mm", { locale: ja })} - {formatInTimeZone(shift.end, "Asia/Tokyo", "HH:mm", { locale: ja })}</span>
                                                         <Badge variant={shift.type === "INDIVIDUAL" ? "default" : shift.type === "GROUP" ? "secondary" : shift.type === "BEGINNER" ? "outline" : shift.type === "TRIAL" ? "default" : "destructive"} className="text-[10px]">
                                                             {shift.type === "INDIVIDUAL" ? "個別" : shift.type === "GROUP" ? "集団" : shift.type === "BEGINNER" ? "ビギナー" : shift.type === "TRIAL" ? "無料体験" : "特別パック"}
                                                         </Badge>

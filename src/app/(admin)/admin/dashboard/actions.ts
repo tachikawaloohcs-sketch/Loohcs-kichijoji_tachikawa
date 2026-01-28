@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { fromZonedTime } from "date-fns-tz";
 
 // ユーザー管理: 全ユーザー取得
 export async function getUsers() {
@@ -213,20 +214,17 @@ export async function adminCreateShift(instructorId: string, date: Date, startTi
     const session = await auth();
     if (session?.user?.role !== "ADMIN") return { error: "Unauthorized" };
 
-    const [sh, sm] = startTime.split(":").map(Number);
-    const [eh, em] = endTime.split(":").map(Number);
+    // Parse as JST
+    // date comes as a Date object from the server action serialization, usually UTC 00:00 of that day if passed from client new Date('YYYY-MM-DD')
+    // But to be safe and precise, we should construct the string "YYYY-MM-DD HH:mm" representing JST and parse it.
 
-    const startDateTime = new Date(date);
-    startDateTime.setHours(sh, sm, 0, 0);
+    // We can assume 'date' parameter has the correct Y-M-D info.
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
 
-    // Handle date overflow if end time is next day? 
-    // For simplicity, assume same day unless end time < start time (which might mean next day)
-    // But usually reservation systems handle this carefully.
-    // Let's assume same day for the "date" provided, or handle crossing midnight if needed.
-    // Given the UI usually picks one date, we construct endDateTime from that date.
-
-    const endDateTime = new Date(date);
-    endDateTime.setHours(eh, em, 0, 0);
+    const startDateTime = fromZonedTime(`${yyyy}-${mm}-${dd} ${startTime}`, 'Asia/Tokyo');
+    const endDateTime = fromZonedTime(`${yyyy}-${mm}-${dd} ${endTime}`, 'Asia/Tokyo');
 
     // Overlap Check for Admin
     const overlap = await prisma.shift.findFirst({

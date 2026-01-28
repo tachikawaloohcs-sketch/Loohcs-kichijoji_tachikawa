@@ -141,9 +141,16 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
     const handleCreateShift = async () => {
         if (!shiftInstructorId) return alert("講師を選択してください");
         if (!shiftDate) return alert("日付を選択してください");
+        // Ensure shiftDate is valid
+        if (isNaN(shiftDate.getTime())) return alert("無効な日付です");
+
         const res = await adminCreateShift(shiftInstructorId, shiftDate, shiftTime, shiftEndTime, shiftType);
-        if (res.success) alert("シフトを作成しました");
-        else alert(res.error);
+        if (res.success) {
+            alert("シフトを作成しました");
+            // Optional: reset form or just keep it
+        } else {
+            alert(res.error);
+        }
     };
 
     const handleCreateBooking = async () => {
@@ -558,7 +565,11 @@ export default function AdminDashboardClient({ students, allUsers, allInstructor
                                 </div>
                                 <div className="space-y-2">
                                     <Label>日付</Label>
-                                    <Input type="date" onChange={(e) => setShiftDate(new Date(e.target.value))} />
+                                    <Input
+                                        type="date"
+                                        value={shiftDate ? format(shiftDate, "yyyy-MM-dd") : ""}
+                                        onChange={(e) => setShiftDate(e.target.value ? new Date(e.target.value) : undefined)}
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>開始時間</Label>
